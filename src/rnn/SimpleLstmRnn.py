@@ -42,14 +42,14 @@ class SimpleLstmRnn(object):
             lcl.append(cell)
 
         cell_layers = tf.nn.rnn_cell.MultiRNNCell(lcl, state_is_tuple=True)
-        initial_state = cell_layers.zero_state(batch_size, tf.float32)
+        self.initial_state = cell_layers.zero_state(batch_size, tf.float32)
 
         outputs = []
         with tf.variable_scope("RNN"):
             for time_step in range(num_steps):
                 if time_step > 0:
                     tf.get_variable_scope().reuse_variables()
-                (cell_output, initial_state) = cell_layers(input_rnn[:, time_step, :], initial_state)
+                (cell_output, self.initial_state) = cell_layers(input_rnn[:, time_step, :], self.initial_state)
                 outputs.append(cell_output)
 
         # 处理输出
