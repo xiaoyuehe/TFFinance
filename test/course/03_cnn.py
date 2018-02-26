@@ -63,6 +63,7 @@ pred = tf.nn.softmax(tf.matmul(fc3_drop,W4)+b4)
 #损失函数
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(pred), reduction_indices=[1]))
 
+
 #训练模型
 train_step = tf.train.AdamOptimizer(LR).minimize(cross_entropy)
 
