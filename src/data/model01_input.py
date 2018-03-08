@@ -28,6 +28,7 @@ class Model01Input(object):
             train_files = os.listdir(ORI_PATH + 'train')
         stock_list = pd.read_csv(ORI_PATH + 'stock.csv', dtype=object)
 
+
         for idx in stock_list.index:
             code = stock_list.loc[idx]['code']
             try:
