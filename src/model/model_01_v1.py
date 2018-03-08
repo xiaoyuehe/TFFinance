@@ -7,9 +7,8 @@
 
 import math
 
-import numpy as np
-import pandas as pd
 import tensorflow as tf
+from model01_input import Model01Input
 
 
 def weight_variable(shape):
@@ -34,7 +33,7 @@ class Model01(object):
     def __init__(self):
         self.loss = None
         self.rate = None
-        self._model_()
+        self.__model__()
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         pass
@@ -55,12 +54,12 @@ class Model01(object):
                                                                self.keep_prob: 1.0}) * 100 / len(x)
         return rate
 
-    def _model_(self):
-        self.x = tf.placeholder(tf.float32, [None, 5, 5, 4], name="x")
+    def __model__(self):
+        self.x = tf.placeholder(tf.float32, [None, 5, 5, 5], name="x")
         self.y = tf.placeholder(tf.float32, [None, 3], name="y")
         self.keep_prob = tf.placeholder(tf.float32)
 
-        W1 = weight_variable([3, 3, 4, 32])
+        W1 = weight_variable([3, 3, 5, 32])
         b1 = bias_variable([32])
         h1 = tf.nn.relu(conv2d(self.x, W1) + b1)
         hp = max_pool_2x2(h1)
@@ -70,9 +69,9 @@ class Model01(object):
         h2 = tf.nn.relu(conv2d(hp, W2) + b2)
         hp2 = max_pool_2x2(h2)
 
-        W3 = weight_variable([3 * 3 * 64, 1024])
+        W3 = weight_variable([5 * 5 * 64, 1024])
         b3 = bias_variable([1024])
-        f3 = tf.reshape(hp2, [-1, 3 * 3 * 64])
+        f3 = tf.reshape(hp2, [-1, 5 * 5 * 64])
         fc3 = tf.nn.relu(tf.matmul(f3, W3) + b3)
         fc3_drop = tf.nn.dropout(fc3, self.keep_prob)
 
@@ -92,25 +91,14 @@ class Model01(object):
 
 
 # ——————————————————导入数据——————————————————————
-f = open('601628_2.csv')
-df = pd.read_csv(f)  # 读入股票数据
-data = np.array(df.loc[:, ['ep', 'hp', 'lp', 'chr', 'exr']])  # 获取最高价序列
-normalize_data = data[::-1]  # 反转，使数据按照日期先后顺序排列
 
-train_x, train_y = [], []  # 训练集
-for i in range(len(normalize_data) - 30):
-    x = normalize_data[i:i + time_step]
-    y = normalize_data[:, :1][i + 1:i + + 1]
-    train_x.append(x.tolist())
-    train_y.append(y.tolist())
-
-STEP_TIMES = 100
+STEP_TIMES = 10000
+BATCH_SIZE = 30
 
 m = Model01()
+inp = Model01Input()
 for i in range(STEP_TIMES):
-    batch_x, batch_y
+    batch_x, batch_y = inp.next_train_batch(BATCH_SIZE)
     m.batch_train(batch_x, batch_y)
     if i % 20 == 0:
         print("%d --> %f : %f" % (i, m.loss, m.rate))
-
-print(m.test(mnist.test.images, mnist.test.labels))

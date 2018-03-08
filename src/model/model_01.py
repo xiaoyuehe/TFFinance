@@ -92,8 +92,8 @@ class Model01(object):
 
 
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+print(mnist.train.images[0], mnist.train.labels[0])
 print(mnist.train.images.shape, mnist.train.labels.shape)
-
 LR = 1e-4
 BATCH_SIZE = 100
 STEP_TIMES = 100

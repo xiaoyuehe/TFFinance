@@ -51,7 +51,8 @@ def deal_stock(code):
                [df.iloc[i + 25:i + 30, 6].sum()])
         # print(df.iloc[i + 25:i + 30, 6])
 
-    pd.DataFrame(result, index=df.index[0:lenth]).to_csv(ORI_PATH + '11_MODEL_01/' + code + '.csv')
+    pd.DataFrame(result, index=df.index[0:lenth]).to_csv(ORI_PATH + '11_MODEL_01/' + code + '.csv', header=False,
+                                                         index=False)
     # print(result_x[0])
     # print(result_y[0])
 
