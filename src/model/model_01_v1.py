@@ -93,7 +93,7 @@ class Model01(object):
 # ——————————————————导入数据——————————————————————
 
 STEP_TIMES = 10000
-BATCH_SIZE = 30
+BATCH_SIZE = 300
 
 m = Model01()
 inp = Model01Input()
