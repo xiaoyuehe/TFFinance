@@ -7,7 +7,14 @@ import numpy as np
 import pandas as pd
 import os
 
-ORI_PATH = 'D:/StockData/11_MODEL_01'
+ORI_PATH = 'D:/StockData/11_MODEL_01/'
+
+def get_tran_data(batch_size):
+    reader = pd.read_table(ORI_PATH+'data.csv', sep=',', chunksize=batch_size)
+    for chunk in reader:
+        print(chunk.as_matrix(columns=[1:125]))
+
+get_tran_data(100)
 
 class Model01Input(object):
 
@@ -23,6 +30,7 @@ class Model01Input(object):
 
     def next_train_batch(self,batch_size):
         if len(self.train_x) >= batch_size:
+            pass
 
         if not train_files or len(train_files) == 0:
             train_files = os.listdir(ORI_PATH + 'train')
@@ -72,7 +80,7 @@ def deal_stock(code):
 
 
 if __name__ == '__main__':
-    preprocess()
+    # preprocess()
     # deal_stock('000001')
     # save(BASE_PATH+'600101.csv','600101',start,end)
     # stock_list = ts.get_stock_basics()
@@ -83,3 +91,4 @@ if __name__ == '__main__':
     #         print('saved ===> ' + str(code))
     #     except Exception:
     #         print('error!')
+    pass
