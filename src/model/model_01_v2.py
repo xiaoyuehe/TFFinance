@@ -6,10 +6,11 @@ resnet implimention
 import collections
 import math
 
+import numpy as np
 import tensorflow as tf
 from model01_input import Model01Input
 
-MODEL_BASE = 'D:/StockData/11_MODEL_01/SNAP4/'
+MODEL_BASE = 'D:/StockData/11_MODEL_01/'
 
 slim = tf.contrib.slim
 
@@ -171,6 +172,25 @@ class Model02(object):
                                                                self.keep_prob: 1.0}) * 100 / len(x)
         return rate
 
+    def validation(self, x, y):
+        result_dict = {}
+        for i in range(math.ceil(len(x) / 100)):
+            # for i in range(1):
+            # print("==> " + str(i) + " " + str(min((i + 1) * 100, len(x))))
+            cx = x[i * 100: min((i + 1) * 100, len(x)), ]
+            cy = y[i * 100: min((i + 1) * 100, len(x)), ]
+            result = self.session.run(self.pred, feed_dict={self.x: cx, self.y: cy,
+                                                            self.keep_prob: 1.0}) * 100 / len(x)
+
+            for j in range(len(cy)):
+                key = str(np.argmax(cy[j])) + '_' + str(np.argmax(result[j]))
+                if key in result_dict:
+                    result_dict[key] = result_dict[key] + 1
+                else:
+                    result_dict[key] = 1
+
+        return result_dict
+
     def snapshot(self, path):
         saver = tf.train.Saver()
         saver.save(self.session, path)
@@ -187,7 +207,7 @@ class Model02(object):
         # a, b = resnet_v2_50(self.x, 3)
         a, b = resnet_v2_152(self.x, 3)
 
-        self.pred = b['predictions']
+        self.pred = tf.reshape(b['predictions'], [-1, 3])
 
         # 损失函数
         self.cross_entropy = tf.reduce_mean(
@@ -204,6 +224,7 @@ class Model02(object):
 
 
 # ——————————————————导入数据——————————————————————
+
 
 STEP_TIMES = 50000
 BATCH_SIZE = 100
@@ -225,8 +246,8 @@ def xx_train():
 
 def yy_test():
     m = Model02()
-    m.restore(MODEL_BASE + "m2.cpt-164-0.93")
-    inp = Model01Input()
+    m.restore(MODEL_BASE + "SNAP4/m2.cpt-127-0.6673999997973442")
+    inp = Model01Input(MODEL_BASE + 'data4.csv')
     x, y = inp.next_train_batch(10000)
     rate = m.test(x, y)
     print("-------------> %f" % (rate))
@@ -242,13 +263,25 @@ def xx_train2():
         m.batch_train(batch_x, batch_y)
 
         rate = m.test(x, y)
-        if rate > yy_rate+0.005:
+        if rate > yy_rate + 0.005:
             yy_rate = rate
             m.snapshot(MODEL_BASE + "m2.cpt-" + str(i) + "-" + str(rate))
 
         if i % 20 == 0:
             print("%d --> %f : %f" % (i, m.loss, rate))
 
-xx_train2()
+
+def yy_validation():
+    m = Model02()
+    m.restore(MODEL_BASE + "SNAP4/m2.cpt-127-0.6673999997973442")
+    # inp = Model01Input(MODEL_BASE + 'data4.csv')
+    inp = Model01Input(MODEL_BASE + 'data3.csv')
+    x, y = inp.next_train_batch(15000)
+    print(m.validation(x, y))
+    # print("-------------> %f" % (rate))
+
+
+# xx_train2()
 # xx_train()
 # yy_test()
+yy_validation()
