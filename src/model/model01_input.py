@@ -10,11 +10,14 @@ ORI_PATH = 'D:/StockData/11_MODEL_01/'
 
 
 class Model01Input(object):
-    def __init__(self):
+    def __init__(self,path=None):
+        self.path = ORI_PATH + 'data3.csv'
+        if not path:
+            self.path = path
         self._reset_()
 
     def _reset_(self):
-        self.reader = pd.read_table(ORI_PATH + 'data.csv', sep=',', header=None, iterator=True)
+        self.reader = pd.read_table(ORI_PATH + 'data3.csv', sep=',', header=None, iterator=True)
 
     def next_train_batch(self, batch_size):
         df = self.reader.get_chunk(batch_size)

@@ -95,14 +95,16 @@ mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 print(mnist.train.images[0], mnist.train.labels[0])
 print(mnist.train.images.shape, mnist.train.labels.shape)
 LR = 1e-4
-BATCH_SIZE = 100
-STEP_TIMES = 100
+BATCH_SIZE = 10
+STEP_TIMES = 10
 UNIT_NUM = 300
 KEEP_PROB = 0.75
 
 m = Model01()
 for i in range(STEP_TIMES):
     batch_x, batch_y = mnist.train.next_batch(BATCH_SIZE)
+    print(batch_x[0])
+    print(batch_y[0])
     m.batch_train(batch_x, batch_y)
     if i % 20 == 0:
         print("%d --> %f : %f" % (i, m.loss, m.rate))

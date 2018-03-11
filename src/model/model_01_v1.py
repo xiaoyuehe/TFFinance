@@ -10,6 +10,8 @@ import math
 import tensorflow as tf
 from model01_input import Model01Input
 
+MODEL_BASE = 'D:/StockData/11_MODEL_01/SNAP/'
+
 
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
@@ -54,6 +56,14 @@ class Model01(object):
                                                                self.keep_prob: 1.0}) * 100 / len(x)
         return rate
 
+    def snapshot(self, path):
+        saver = tf.train.Saver()
+        saver.save(self.session, path)
+
+    def restore(self, path):
+        saver = tf.train.Saver()
+        saver.restore(self.session, path)
+
     def __model__(self):
         self.x = tf.placeholder(tf.float32, [None, 5, 5, 5], name="x")
         self.y = tf.placeholder(tf.float32, [None, 3], name="y")
@@ -69,19 +79,30 @@ class Model01(object):
         h2 = tf.nn.relu(conv2d(hp, W2) + b2)
         hp2 = max_pool_2x2(h2)
 
-        W3 = weight_variable([5 * 5 * 64, 1024])
-        b3 = bias_variable([1024])
-        f3 = tf.reshape(hp2, [-1, 5 * 5 * 64])
-        fc3 = tf.nn.relu(tf.matmul(f3, W3) + b3)
-        fc3_drop = tf.nn.dropout(fc3, self.keep_prob)
+        W3 = weight_variable([3, 3, 64, 128])
+        b3 = bias_variable([128])
+        h3 = tf.nn.relu(conv2d(hp2, W3) + b3)
+        hp3 = max_pool_2x2(h3)
 
-        W4 = weight_variable([1024, 3])
-        b4 = bias_variable([3])
+        W4 = weight_variable([3, 3, 128, 64])
+        b4 = bias_variable([64])
+        h4 = tf.nn.relu(conv2d(hp3, W4) + b4)
+        hp4 = max_pool_2x2(h4)
 
-        self.pred = tf.nn.softmax(tf.matmul(fc3_drop, W4) + b4)
+        W5 = weight_variable([5 * 5 * 64, 1024])
+        b5 = bias_variable([1024])
+        f5 = tf.reshape(hp4, [-1, 5 * 5 * 64])
+        fc5 = tf.nn.relu(tf.matmul(f5, W5) + b5)
+        fc5_drop = tf.nn.dropout(fc5, self.keep_prob)
+
+        W6 = weight_variable([1024, 3])
+        b6 = bias_variable([3])
+
+        self.pred = tf.nn.softmax(tf.matmul(fc5_drop, W6) + b6)
 
         # 损失函数
-        self.cross_entropy = tf.reduce_mean(-tf.reduce_sum(self.y * tf.log(self.pred), reduction_indices=[1]))
+        self.cross_entropy = tf.reduce_mean(
+            -tf.reduce_sum(self.y * tf.log(tf.clip_by_value(self.pred, 0.05, 0.95)), reduction_indices=[1]))
 
         # 训练模型
         self.train_step = tf.train.AdamOptimizer(1e-4).minimize(self.cross_entropy)
@@ -92,13 +113,18 @@ class Model01(object):
 
 # ——————————————————导入数据——————————————————————
 
-STEP_TIMES = 10000
-BATCH_SIZE = 300
+STEP_TIMES = 50000
+BATCH_SIZE = 500
 
 m = Model01()
+m.restore(MODEL_BASE + "m1.cpt-32-0.802")
 inp = Model01Input()
+max_rate = 0
 for i in range(STEP_TIMES):
     batch_x, batch_y = inp.next_train_batch(BATCH_SIZE)
     m.batch_train(batch_x, batch_y)
+    if m.rate > max_rate:
+        max_rate = m.rate
+        m.snapshot(MODEL_BASE + "m1.cpt-" + str(i) + "-" + str(max_rate))
     if i % 20 == 0:
         print("%d --> %f : %f" % (i, m.loss, m.rate))
