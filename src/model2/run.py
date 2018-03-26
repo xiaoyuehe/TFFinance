@@ -7,7 +7,7 @@ import tensorflow as tf
 from model02_input import Model02Input
 from model_02_v1 import Model02
 
-TEST_NO = '4'
+TEST_NO = '5'
 
 MODEL_BASE = 'D:/StockData/11_MODEL_02/'
 

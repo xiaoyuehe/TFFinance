@@ -1,21 +1,12 @@
 # coding=utf-8
-'''
-resnet implimention
-'''
+"""
+resnet 实现方案
+20180326
+"""
 
 import collections
-import math
 
-import numpy as np
 import tensorflow as tf
-from model02_input import Model02Input
-
-TEST_NO = '3'
-
-MODEL_BASE = 'D:/StockData/11_MODEL_02/'
-
-STEP_TIMES = 500000
-BATCH_SIZE = 500
 
 slim = tf.contrib.slim
 
@@ -150,141 +141,3 @@ def resnet_v2_152(inputs, num_classes=None, global_pool=True, reuse=None, scope=
         Block('block4', bottleneck, [(2048, 512, 1)] * 3)
     ]
     return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block=True, reuse=reuse, scope=scope)
-
-
-class Model02(object):
-    def __init__(self):
-        self.loss = None
-        self.rate = None
-        self.__model__()
-        self.session = tf.Session()
-        self.session.run(tf.global_variables_initializer())
-        pass
-
-    def batch_train(self, batch_x, batch_y):
-        _, loss, rr = self.session.run([self.train_step, self.cross_entropy, self.accuracy],
-                                       feed_dict={self.x: batch_x, self.y: batch_y, self.keep_prob: 0.75})
-        self.loss = loss
-        self.rate = rr
-
-    def test_loss(self, x, y):
-        loss = 0
-        for i in range(math.ceil(len(x) / 100)):
-            loss += self.session.run(self.cross_entropy, feed_dict={self.x: x[i * 100: min((i + 1) * 100, len(x)), ],
-                                                                    self.y: y[i * 100: min((i + 1) * 100, len(x)), ],
-                                                                    self.keep_prob: 1.0}) * 100 / len(x)
-        return loss
-
-    def test(self, x, y):
-        rate = 0
-        # print(len(x))
-        for i in range(math.ceil(len(x) / 100)):
-            # print("==> " + str(i) + " " + str(min((i + 1) * 100, len(x))))
-            rate += self.session.run(self.accuracy, feed_dict={self.x: x[i * 100: min((i + 1) * 100, len(x)), ],
-                                                               self.y: y[i * 100: min((i + 1) * 100, len(x)), ],
-                                                               self.keep_prob: 1.0}) * 100 / len(x)
-        return rate
-
-    def validation(self, x, y):
-        result_dict = {}
-        for i in range(math.ceil(len(x) / 100)):
-            # for i in range(1):
-            # print("==> " + str(i) + " " + str(min((i + 1) * 100, len(x))))
-            cx = x[i * 100: min((i + 1) * 100, len(x)), ]
-            cy = y[i * 100: min((i + 1) * 100, len(x)), ]
-            result = self.session.run(self.pred, feed_dict={self.x: cx, self.y: cy,
-                                                            self.keep_prob: 1.0}) * 100 / len(x)
-
-            for j in range(len(cy)):
-                key = str(np.argmax(cy[j])) + '_' + str(np.argmax(result[j]))
-                if key in result_dict:
-                    result_dict[key] = result_dict[key] + 1
-                else:
-                    result_dict[key] = 1
-
-        return result_dict
-
-    def snapshot(self, path):
-        saver = tf.train.Saver()
-        saver.save(self.session, path)
-
-    def restore(self, path):
-        saver = tf.train.Saver()
-        saver.restore(self.session, path)
-
-    def __model__(self):
-        self.x = tf.placeholder(tf.float32, [None, 5, 5, 5], name="x")
-        self.y = tf.placeholder(tf.float32, [None, 3], name="y")
-        self.keep_prob = tf.placeholder(tf.float32)
-
-        a, b = resnet_v2_50(self.x, 3)
-        # a, b = resnet_v2_101(self.x, 3)
-        # a, b = resnet_v2_152(self.x, 3)
-
-        self.pred = tf.reshape(b['predictions'], [-1, 3])
-
-        # 损失函数
-        # self.cross_entropy = tf.reduce_mean(
-        #     -tf.reduce_sum(self.y * tf.log(self.pred), reduction_indices=[1]))
-        # self.cross_entropy = tf.reduce_mean(
-        #     -tf.reduce_sum(self.y * tf.log(tf.clip_by_value(self.pred, 0.05, 0.95)), reduction_indices=[1]))
-
-        loss_weight = tf.constant([0.49, 1.43, 3.73], dtype=tf.float32)
-        self.cross_entropy = tf.reduce_mean(
-            tf.reduce_sum((tf.multiply(loss_weight, tf.pow(tf.subtract(self.y, self.pred), 2)))
-                          , reduction_indices=[1]))
-
-        # 加权
-        # loss_weight = tf.constant([0.49, 1.43, 3.73], dtype=tf.float32)
-        # self.cross_entropy = tf.reduce_mean(
-        #     tf.reduce_sum(self.y *
-        #                   tf.pow(tf.multiply(tf.constant([-1.0, -1.0, -1.0], dtype=tf.float32),
-        #                                      tf.log(tf.clip_by_value(self.pred, 1e-10, 1.0))), loss_weight),
-        #                   reduction_indices=[1]))
-        # 原始正常的方式
-        # loss_weight = tf.constant([0.49, 1.43, 3.73], dtype=tf.float32)
-        # self.cross_entropy = tf.reduce_mean(
-        #     -tf.reduce_sum(tf.multiply(loss_weight, self.y) * tf.log(tf.clip_by_value(self.pred, 1e-10, 1.0)),
-        #                    reduction_indices=[1]))
-
-        # self.cross_entropy = tf.reduce_mean(tf.where(
-        #     tf.greater(tf.argmax(self.y, 1), tf.argmax(self.pred, 1)),
-        #     tf.cast(tf.subtract(tf.argmax(self.y, 1), tf.argmax(self.pred, 1)), dtype=tf.float32),
-        #     tf.multiply(3.0, tf.cast(tf.subtract(tf.argmax(self.pred, 1), tf.argmax(self.y, 1)), dtype=tf.float32))
-        # ))
-
-        # 训练模型
-        self.train_step = tf.train.AdamOptimizer(1e-4).minimize(self.cross_entropy)
-
-        # 准确率计算
-        self.accuracy = tf.reduce_mean(
-            tf.cast(tf.equal(tf.argmax(self.y, 1), tf.argmax(self.pred, 1)), tf.float32))
-
-
-def xx_train2():
-    m = Model02()
-    # m.restore(MODEL_BASE + "MM/m6.cpt-0312-83000")
-    inp = Model02Input(MODEL_BASE + "train_sh.csv")
-
-    test_inp = Model02Input(MODEL_BASE + 'test.csv')
-    x, y = test_inp.next_train_batch(5000)
-
-    yy_rate = 0.4
-    for i in range(STEP_TIMES):
-        batch_x, batch_y = inp.next_train_batch(BATCH_SIZE)
-        m.batch_train(batch_x, batch_y)
-
-        if i % 20 == 0:
-            rate = m.test(x, y)
-            print("%d --> %f : %f ; test: %f:%f" % (i, m.loss, m.rate, rate, m.rate - rate))
-
-            if rate > yy_rate + 0.01:
-                yy_rate = rate
-                m.snapshot(MODEL_BASE + 'SNAP' + TEST_NO + '/m' + TEST_NO + '.cpt-' + str(i) + '-' + str(rate))
-
-        if i % 5000 == 0:
-            m.snapshot(MODEL_BASE + 'SNAP' + TEST_NO + '/ok_m' + TEST_NO + '.cpt-' + str(i))
-
-# xx_train2()
-# yy_test()
-# yy_validation()
