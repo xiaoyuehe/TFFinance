@@ -8,12 +8,14 @@ import math
 
 import numpy as np
 import tensorflow as tf
-from model01_input import Model01Input
+from model02_input import Model02Input
 
-MODEL_BASE = 'D:/StockData/11_MODEL_01/'
+TEST_NO = '3'
 
-STEP_TIMES = 50000
-BATCH_SIZE = 100
+MODEL_BASE = 'D:/StockData/11_MODEL_02/'
+
+STEP_TIMES = 500000
+BATCH_SIZE = 500
 
 slim = tf.contrib.slim
 
@@ -169,8 +171,8 @@ class Model02(object):
         loss = 0
         for i in range(math.ceil(len(x) / 100)):
             loss += self.session.run(self.cross_entropy, feed_dict={self.x: x[i * 100: min((i + 1) * 100, len(x)), ],
-                                                               self.y: y[i * 100: min((i + 1) * 100, len(x)), ],
-                                                               self.keep_prob: 1.0}) * 100 / len(x)
+                                                                    self.y: y[i * 100: min((i + 1) * 100, len(x)), ],
+                                                                    self.keep_prob: 1.0}) * 100 / len(x)
         return loss
 
     def test(self, x, y):
@@ -215,8 +217,8 @@ class Model02(object):
         self.y = tf.placeholder(tf.float32, [None, 3], name="y")
         self.keep_prob = tf.placeholder(tf.float32)
 
-        # a, b = resnet_v2_50(self.x, 3)
-        a, b = resnet_v2_101(self.x, 3)
+        a, b = resnet_v2_50(self.x, 3)
+        # a, b = resnet_v2_101(self.x, 3)
         # a, b = resnet_v2_152(self.x, 3)
 
         self.pred = tf.reshape(b['predictions'], [-1, 3])
@@ -227,10 +229,17 @@ class Model02(object):
         # self.cross_entropy = tf.reduce_mean(
         #     -tf.reduce_sum(self.y * tf.log(tf.clip_by_value(self.pred, 0.05, 0.95)), reduction_indices=[1]))
 
-        loss_weight = tf.constant([0.25, 1, 4], dtype=tf.float32)
+        loss_weight = tf.constant([0.49, 1.43, 3.73], dtype=tf.float32)
         self.cross_entropy = tf.reduce_mean(
-            -tf.reduce_sum(tf.multiply(loss_weight, self.y) * tf.log(tf.clip_by_value(self.pred, 1e-10, 1.0)),
-                           reduction_indices=[1]))
+            tf.reduce_sum(self.y *
+                          tf.pow(tf.multiply(tf.constant([-1.0, -1.0, -1.0], dtype=tf.float32),
+                                             tf.log(tf.clip_by_value(self.pred, 1e-10, 1.0))), loss_weight),
+                          reduction_indices=[1]))
+        # 原始正常的方式
+        # loss_weight = tf.constant([0.49, 1.43, 3.73], dtype=tf.float32)
+        # self.cross_entropy = tf.reduce_mean(
+        #     -tf.reduce_sum(tf.multiply(loss_weight, self.y) * tf.log(tf.clip_by_value(self.pred, 1e-10, 1.0)),
+        #                    reduction_indices=[1]))
 
         # self.cross_entropy = tf.reduce_mean(tf.where(
         #     tf.greater(tf.argmax(self.y, 1), tf.argmax(self.pred, 1)),
@@ -246,85 +255,30 @@ class Model02(object):
             tf.cast(tf.equal(tf.argmax(self.y, 1), tf.argmax(self.pred, 1)), tf.float32))
 
 
-# ——————————————————导入数据——————————————————————
-
-
-
-
-def xx_train():
-    m = Model02()
-    inp = Model01Input()
-    max_rate = 0.7
-    for i in range(STEP_TIMES):
-        batch_x, batch_y = inp.next_train_batch(BATCH_SIZE)
-        m.batch_train(batch_x, batch_y)
-        if m.rate > max_rate:
-            max_rate = m.rate
-            m.snapshot(MODEL_BASE + "m2.cpt-" + str(i) + "-" + str(max_rate))
-        if i % 20 == 0:
-            print("%d --> %f : %f" % (i, m.loss, m.rate))
-
-
-def yy_test():
-    m = Model02()
-    m.restore(MODEL_BASE + "SNAP5/m2.cpt-1076-0.9659000068902976")
-    inp = Model01Input(MODEL_BASE + 'data4.csv')
-    x, y = inp.next_train_batch(10000)
-    rate = m.test(x, y)
-    print("-------------> %f" % (rate))
-
-
 def xx_train2():
     m = Model02()
-    m.restore(MODEL_BASE + "SNAP5/m2.cpt-3328-0.9610000079870229")
-    inp = Model01Input()
-    yy_rate = 0.64
-    x, y = inp.next_train_batch(10000)
+    # m.restore(MODEL_BASE + "MM/m6.cpt-0312-83000")
+    inp = Model02Input(MODEL_BASE + "train_sh.csv")
+
+    test_inp = Model02Input(MODEL_BASE + 'test.csv')
+    x, y = test_inp.next_train_batch(5000)
+
+    yy_rate = 0.4
     for i in range(STEP_TIMES):
         batch_x, batch_y = inp.next_train_batch(BATCH_SIZE)
         m.batch_train(batch_x, batch_y)
 
-        rate = m.test(x, y)
-        if rate > yy_rate + 0.005:
-            yy_rate = rate
-            m.snapshot(MODEL_BASE + "SNAP5/m2.cpt-" + str(i) + "-" + str(rate))
-
         if i % 20 == 0:
-            print("%d --> %f : %f" % (i, m.loss, rate))
+            rate = m.test(x, y)
+            print("%d --> %f : %f ; test: %f:%f" % (i, m.loss, m.rate, rate, m.rate - rate))
 
+            if rate > yy_rate + 0.01:
+                yy_rate = rate
+                m.snapshot(MODEL_BASE + 'SNAP' + TEST_NO + '/m' + TEST_NO + '.cpt-' + str(i) + '-' + str(rate))
 
-def xx_train3():
-    m = Model02()
-    inp = Model01Input()
-    test_inp = Model01Input(MODEL_BASE + 'data4.csv')
-    max_loss = 100
-    x, y = test_inp.next_train_batch(1000)
-    for i in range(STEP_TIMES):
-        batch_x, batch_y = inp.next_train_batch(BATCH_SIZE)
-        m.batch_train(batch_x, batch_y)
-
-        loss = m.test_loss(x, y)
-        if loss > max_loss + 0.005:
-            max_loss = loss
-            m.snapshot(MODEL_BASE + "SNAP5/m2.cpt-" + str(i) + "-" + str(loss))
-
-        if i % 20 == 0:
-            print("%d --> %f : %f" % (i, m.loss, loss))
-
-
-def yy_validation():
-    m = Model02()
-    # m.restore(MODEL_BASE + "SNAP4/m2.cpt-127-0.6673999997973442")
-    m.restore(MODEL_BASE + "SNAP5/m2.cpt-1076-0.9659000068902976")
-    inp = Model01Input(MODEL_BASE + 'data4.csv')
-    # inp = Model01Input(MODEL_BASE + 'data3.csv')
-    x, y = inp.next_train_batch(15000)
-    print(m.validation(x, y))
-    # print("-------------> %f" % (rate))
-
+        if i % 5000 == 0:
+            m.snapshot(MODEL_BASE + 'SNAP' + TEST_NO + '/ok_m' + TEST_NO + '.cpt-' + str(i))
 
 # xx_train2()
-# xx_train()
 # yy_test()
-yy_validation()
-# xx_train3()
+# yy_validation()
