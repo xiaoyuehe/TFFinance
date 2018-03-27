@@ -4,7 +4,7 @@
 """
 
 import tensorflow as tf
-from datasource.ds1 import Ds1
+from datasource.ds2 import Ds2
 from framwork.Excutor import SoftMaxExecutor
 from models.resnet import resnet_v2_50
 
@@ -19,12 +19,12 @@ BATCH_SIZE = 500
 
 def model():
     x = tf.placeholder(tf.float32, [None, 5, 5, 5], name="x")
-    y = tf.placeholder(tf.float32, [None, 3], name="y")
+    y = tf.placeholder(tf.float32, [None, 10], name="y")
     keep_prob = tf.placeholder(tf.float32)
-    a, b = resnet_v2_50(x, 3)
+    a, b = resnet_v2_50(x, 10)
     # a, b = resnet_v2_101(x, 3)
     # a, b = resnet_v2_152(x, 3)
-    predict = tf.reshape(b['predictions'], [-1, 3])
+    predict = tf.reshape(b['predictions'], [-1, 10])
     loss_weight = tf.constant([0.49, 1.43, 3.73], dtype=tf.float32)
     loss = tf.reduce_mean(
         tf.reduce_sum((tf.multiply(loss_weight, tf.pow(tf.subtract(y, predict), 2)))
@@ -41,7 +41,7 @@ def xx_train2():
     m = model()
     m.begin()
     # m.restore(MODEL_BASE + "MM/m6.cpt-0312-83000")
-    inp = Ds1(MODEL_BASE + "train_sh.csv")
+    inp = Ds2(MODEL_BASE + "train_sh.csv")
 
     test_inp = Ds1(MODEL_BASE + 'test.csv')
     x, y = test_inp.next_train_batch(5000)
