@@ -49,6 +49,21 @@ class Executor(object):
     def run_predict(self, x):
         return self.session.run(self.predict, feed_dict={self.x: x, self.keep_prob: 1.0})
 
+    def run_loss(self, x, y):
+        batch_size = 100
+        count = math.ceil(len(x) / batch_size)
+        loss = 0
+        for i in range(count):
+            cbz = batch_size if i < count else (len(x) - i * batch_size)
+            cl, ca = self.session.run([self.loss],
+                                      feed_dict={self.x: x[i * batch_size: min((i + 1) * batch_size,
+                                                                               len(x)), ],
+                                                 self.y: y[i * batch_size: min((i + 1) * batch_size,
+                                                                               len(x)), ],
+                                                 self.keep_prob: 1.0})
+            loss += cl * cbz / len(x)
+        return loss
+
     def run_test(self, x, y):
         batch_size = 100
         count = math.ceil(len(x) / batch_size)
@@ -112,3 +127,14 @@ class SoftMaxExecutor(Executor):
             rate += ca * cbz / len(x)
             accr_rate(cy, cp, pair_dict, result_dict, actual_dict, pred_dict, softmax)
         return loss, rate, result_dict, pair_dict
+
+
+class RegressionExcutor(Executor):
+    def __init__(self, x, y, predict, loss, train_step, accuracy, keep_prob=1.0):
+        super(RegressionExcutor, self).__init__(x, y, predict, loss, train_step, accuracy,
+                                                keep_prob)
+
+
+def square_loss(y, predict):
+    loss = tf.reduce_mean(tf.square(tf.reshape(y, [-1]) - tf.reshape(predict, [-1])))
+    return loss

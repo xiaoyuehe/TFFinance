@@ -141,3 +141,15 @@ class Ds2(object):
         # one = np.ones(y.shape)
         yy = process_y(y)
         return x, yy
+
+    def next_train_batch_flat_lstm(self, batch_size):
+        df = self.reader.get_chunk(batch_size)
+        actual_size = df.iloc[:, 0].size
+        if actual_size < batch_size:
+            self._reset_()
+
+        arr = df.as_matrix()
+        x = np.transpose(arr[:, 0:125].reshape((actual_size, 5, 25)),(0,2,1))
+        y = arr[:, 125:]
+
+        return x, y
