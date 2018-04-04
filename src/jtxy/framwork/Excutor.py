@@ -49,13 +49,12 @@ class Executor(object):
     def run_predict(self, x):
         return self.session.run(self.predict, feed_dict={self.x: x, self.keep_prob: 1.0})
 
-    def run_loss(self, x, y):
-        batch_size = 100
-        count = math.ceil(len(x) / batch_size)
-        loss = 0
+    def run_loss(self, x, y,batch_size = 100):
+        count = int(math.ceil(len(x) / batch_size))
+        loss = 0.0
         for i in range(count):
             cbz = batch_size if i < count else (len(x) - i * batch_size)
-            cl, ca = self.session.run([self.loss],
+            cl = self.session.run(self.loss,
                                       feed_dict={self.x: x[i * batch_size: min((i + 1) * batch_size,
                                                                                len(x)), ],
                                                  self.y: y[i * batch_size: min((i + 1) * batch_size,
