@@ -123,6 +123,53 @@ def resnet_v2_50(inputs, num_classes=None, global_pool=True, reuse=None, scope='
     return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block=True, reuse=reuse, scope=scope)
 
 
+def resnet_v2_35(inputs, num_classes=None, global_pool=True, reuse=None, scope='resnet_v2_35'):
+    blocks = [
+        Block('block1', bottleneck, [(256, 64, 1)] + [(256, 64, 2)]),
+        Block('block2', bottleneck, [(512, 128, 1)] + [(512, 128, 2)]),
+        Block('block3', bottleneck, [(1024, 256, 1)] * 3 + [(1024, 256, 2)]),
+        Block('block4', bottleneck, [(2048, 512, 1)] * 3)
+    ]
+    return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block=True, reuse=reuse, scope=scope)
+
+
+def resnet_v2_26(inputs, num_classes=None, global_pool=True, reuse=None, scope='resnet_v2_26'):
+    blocks = [
+        Block('block1', bottleneck, [(256, 64, 1)] + [(256, 64, 2)]),
+        Block('block2', bottleneck, [(512, 128, 1)] + [(512, 128, 2)]),
+        Block('block3', bottleneck, [(1024, 256, 1)] + [(1024, 256, 2)]),
+        Block('block4', bottleneck, [(2048, 512, 1)] * 2)
+    ]
+    return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block=True, reuse=reuse, scope=scope)
+
+
+def resnet_v2_26_half(inputs, num_classes=None, global_pool=True, reuse=None, scope='resnet_v2_26_half'):
+    blocks = [
+        Block('block1', bottleneck, [(128, 32, 1)] + [(128, 32, 2)]),
+        Block('block2', bottleneck, [(256, 64, 1)] + [(256, 64, 2)]),
+        Block('block3', bottleneck, [(512, 128, 1)] + [(512, 128, 2)]),
+        Block('block4', bottleneck, [(1024, 256, 1)] * 2)
+    ]
+    return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block=True, reuse=reuse, scope=scope)
+
+
+def resnet_v2_20_half(inputs, num_classes=None, global_pool=True, reuse=None, scope='resnet_v2_26_half'):
+    blocks = [
+        Block('block1', bottleneck, [(128, 32, 1)] + [(128, 32, 2)]),
+        Block('block2', bottleneck, [(256, 64, 1)] + [(256, 64, 2)]),
+        Block('block3', bottleneck, [(512, 128, 1)] * 2)
+    ]
+    return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block=True, reuse=reuse, scope=scope)
+
+
+def resnet_v2_10_half(inputs, num_classes=None, global_pool=True, reuse=None, scope='resnet_v2_10_half'):
+    blocks = [
+        Block('block1', bottleneck, [(128, 32, 1)] + [(128, 32, 2)]),
+        Block('block2', bottleneck, [(256, 64, 1)]  * 2)
+    ]
+    return resnet_v2(inputs, blocks, num_classes, global_pool, include_root_block=True, reuse=reuse, scope=scope)
+
+
 def resnet_v2_101(inputs, num_classes=None, global_pool=True, reuse=None, scope='resnet_v2_101'):
     blocks = [
         Block('block1', bottleneck, [(256, 64, 1)] * 2 + [(256, 64, 2)]),

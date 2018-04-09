@@ -10,8 +10,8 @@ from models.mlp import mlp
 from utils.data import cast_float
 
 TEST_NO = '7'
-MODEL_BASE = '/Users/yaoli/StockData/11_MODEL_02/'
-# MODEL_BASE = 'D:/StockData/11_MODEL_02/'
+# MODEL_BASE = '/Users/yaoli/StockData/11_MODEL_02/'
+MODEL_BASE = 'D:/StockData/11_MODEL_02/'
 
 STEP_TIMES = 20000
 BATCH_SIZE = 500
@@ -22,7 +22,7 @@ def model():
     y = tf.placeholder(tf.float32, [None, 1], name="y")
     keep_prob = tf.placeholder(tf.float32)
     result = mlp(x, [125, 125, 250, 250, 500, 500, 250, 125, 1], keep_prob, output_size=None)
-    predict = tf.round(tf.clip_by_value(result, 1, 10))
+    predict = tf.cast(tf.round(tf.clip_by_value(result, 1, 10)), tf.float32)
     loss = tf.reduce_mean(
         tf.reduce_sum(tf.pow(tf.subtract(y, result), 2), reduction_indices=[1]))
     # 训练模型

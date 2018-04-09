@@ -6,15 +6,15 @@
 import tensorflow as tf
 from datasource.ds2 import Ds2
 from framwork.Excutor import SoftMaxExecutor
-from models.resnet import resnet_v2_50
+from models.resnet import resnet_v2_10_half
 from utils.data import cast_float
 
-TEST_NO = '8'
+TEST_NO = '9'
 
 # MODEL_BASE = '/Users/yaoli/StockData/11_MODEL_02/'
 MODEL_BASE = 'D:/StockData/11_MODEL_02/'
 
-STEP_TIMES = 500000
+STEP_TIMES = 5000000
 BATCH_SIZE = 500
 
 
@@ -22,7 +22,7 @@ def model():
     x = tf.placeholder(tf.float32, [None, 5, 5, 5], name="x")
     y = tf.placeholder(tf.float32, [None, 10], name="y")
     keep_prob = tf.placeholder(tf.float32)
-    a, b = resnet_v2_50(x, num_classes=10, global_pool=False)
+    a, b = resnet_v2_10_half(x, num_classes=10, global_pool=False)
     # a, b = resnet_v2_101(x, 3)
     # a, b = resnet_v2_152(x, 3)
     predict = tf.reshape(b['predictions'], [-1, 10])
@@ -44,7 +44,7 @@ def model():
 def xx_train2():
     m = model()
     m.begin()
-    # m.restore(MODEL_BASE + "MM/m6.cpt-0312-83000")
+    m.restore(MODEL_BASE + "SNAP9/ok_m9.cpt-5000")
     inp = Ds2(MODEL_BASE + "train_sh.csv")
 
     test_inp = Ds2(MODEL_BASE + 'test.csv')
