@@ -55,4 +55,22 @@ def xichi_ip_proxy():
     return result
 
 
-xichi_ip_proxy()
+def valid_proxy(proxy_obj):
+    url = 'https://www.baidu.com'
+    url_opener = build_opener(use_proxy=True, proxy_obj=proxy_obj)
+    headers_dict = {}
+    headers_dict[
+        'User-Agent'] = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Mobile Safari/537.36'
+    req = build_request(url, headers_dict=headers_dict)
+    try:
+        resp = fetch_response(url_opener, req)
+        print(resp.read())
+        if resp.getcode() == 200:
+            return True
+    except BaseException:
+        return False
+
+
+# xichi_ip_proxy()
+po={'http':'http://49.64.186.185:30919'}
+print(valid_proxy(po))
