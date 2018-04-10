@@ -21,7 +21,7 @@ def build_opener(use_proxy=False, proxy_obj=None):
         return request.build_opener()
 
 
-def build_request(url, method='GET', headers_dict=None, data=None):
+def build_request(url, method='GET', headers_dict={}, data=None):
     """
     构造Request对象（包含请求头和发送的数据信息）
     :param url:
@@ -51,7 +51,7 @@ def read_response_result(resp, encode='utf8'):
     :param encode:
     :return:
     """
-    return resp.read(encode)
+    return resp.read().decode(encode)
 
 
 def response_code(resp):

@@ -4,8 +4,10 @@
 :author xiaoyuehe
 """
 
-from api/http_tool import build_opener,build_request,fetch_response,read_response_result
-from api/response_parser import dom_xpath_array
+from api.http_tool import build_opener, build_request, read_response_result, fetch_response
+from api.response_parser import dom_xpath_array
+from lxml import etree
+
 
 class IpProxyHolder(object):
     def __init__(self):
@@ -28,12 +30,29 @@ class IpProxyHolder(object):
 
 def xichi_ip_proxy():
     result = []
-    url = ''
-    xpath = ''
+    # url = 'http://www.baidu.com'
+    url = 'http://www.xicidaili.com/nn/2'
+    xpath = '//table[@id="ip_list"]/tr'
     url_opener = build_opener(use_proxy=False)
-    req = build_request(url)
-    result_html = read_response_result(fetch_response(url_opener,req))
-    dom_array = dom_xpath_array(result_html,xpath)
+    headers_dict = {}
+    headers_dict[
+        'User-Agent'] = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Mobile Safari/537.36'
+    req = build_request(url, headers_dict=headers_dict)
+    result_html = read_response_result(fetch_response(url_opener, req))
+    print(result_html)
+    dom_array = dom_xpath_array(result_html, xpath)
+    i = 0
     for el in dom_array:
-
+        if i == 0:
+            i += 1
+            continue
+        el = etree.fromstring(etree.tostring(el))
+        print(etree.tostring(el.xpath('//td[position()=2]')[0]))
+        ip = el.xpath('//td[position()=2]')[0].text
+        port = el.xpath('//td[position()=3]')[0].text
+        ptype = el.xpath('//td[position()=6]')[0].text
+        print('%s %s %s' % (ip, port, ptype))
     return result
+
+
+xichi_ip_proxy()
