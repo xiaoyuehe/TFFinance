@@ -21,8 +21,8 @@ def model():
     x = tf.placeholder(tf.float32, [None, 20, 5], name="x")
     y = tf.placeholder(tf.float32, [None, 20, 1], name="y")
     keep_prob = tf.placeholder(tf.float32)
-    predict, _ = lstm(x, 5, 15, 1)
-    loss = tf.reduce_mean(tf.square(tf.reshape(y, [-1]) - tf.reshape(predict, [-1])))
+    predict, _ = lstm(x, 5, 25, 1)
+    loss = tf.reduce_mean(tf.square(tf.reshape(y[-1], [-1]) - tf.reshape(predict[-1], [-1])))
     # 训练模型
     train_step = tf.train.AdamOptimizer(1e-4).minimize(loss)
     # 准确率计算
