@@ -3,15 +3,22 @@
 """
 
 import json
+import ssl
 from urllib import request, error
 
 
-class IpProxy(object):
+class IpProxyValidate(object):
+    def __init__(self):
+        pass
+
+
+class IpProxyHandler(object):
     def __init__(self):
         self.opener = None
         self.last_state = 0
         self.acc_fail = 0
         self.continue_fail = 0
+        ssl._create_default_https_context = ssl._create_unverified_context
         pass
 
     def change_proxy(self, proxy_obj):
@@ -23,7 +30,7 @@ class IpProxy(object):
             req = request.Request(url=url, data=data, headers=headers, method=method)
             response = self.opener.open(req, timeout=timeout)
             return response.read()
-        except error.URLError as  e:
+        except BaseException as  e:
             print(e)
             self.acc_fail += 1
             if self.last_state == 1:
@@ -42,8 +49,8 @@ class IpProxy(object):
         return None
 
 
-# url = 'https://pet-chain.baidu.com/data/pet/queryPetById'
-url = 'http://www.baidu.com'
+url = 'https://pet-chain.baidu.com/data/pet/queryPetById'
+# url = 'http://www.baidu.com'
 post_data = {
     'appId': 1,
     'nounce': None,
@@ -54,7 +61,7 @@ post_data = {
     'tpl': ""}
 headers = {'Content-Type': 'application/json'}
 data = bytes(json.dumps(post_data), 'utf8')
-proxy = IpProxy()
+proxy = IpProxyHandler()
 proxy.change_proxy({
     'http': 'http://111.155.116.217:8123',
     'https': 'https://111.155.116.217:8123'
