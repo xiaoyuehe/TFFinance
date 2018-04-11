@@ -3,8 +3,10 @@
 http相关工具方法
 :author xiaoyuehe
 """
-
+import ssl
 from urllib import request
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def build_opener(use_proxy=False, proxy_obj=None):
