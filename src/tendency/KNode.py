@@ -3,14 +3,31 @@
 K线数据分析
 '''
 
+import math
+
+
+def get_log(src_value, use_log, base):
+    if use_log and src_value > 0:
+        return math.log(src_value, base)
+    return src_value
+
 
 class KNode(object):
-    def __init__(self, dt='', cp=0.0, op=0.0, hp=0.0, lp=0.0):
-        self.op = op
-        self.cp = cp
-        self.hp = hp
-        self.lp = lp
+    def __init__(self, dt='', cp=0.0, op=0.0, hp=0.0, lp=0.0, amount=0.0, use_log=True, base=2):
+        self.src_op = op
+        self.src_cp = cp
+        self.src_hp = hp
+        self.src_lp = lp
+        self.amount = amount
         self.dt = dt
+        self.use_log = use_log
+        self.op = get_log(op, use_log, base)
+        self.cp = get_log(cp, use_log, base)
+        self.hp = get_log(hp, use_log, base)
+        self.lp = get_log(lp, use_log, base)
+
+    def __str__(self):
+        return "[" + str(self.cp) + "]"
 
 
 class Wave(object):
@@ -34,13 +51,16 @@ class Wave(object):
             return self.list[len(self.list) - 1]
         return None
 
+    def __str__(self):
+        return "wave : dir " + str(self.directory) + " base:" + str(self.base.cp) + " list : " + str_list(self.list)
+
 
 class Tendency(object):
     def __init__(self, directory=0, base=None):
         self.list = []
         self.wave_list = []
         self.base = base
-        self.direct = directory
+        self.directory = directory
         pass
 
     def append_wave(self, wave):
@@ -48,6 +68,10 @@ class Tendency(object):
             self.wave_list.append(wave)
             for node in wave.list:
                 self.list.append(node)
+
+    def __str__(self):
+        return "tendency : dir " + str(self.directory) + " base:" + str(self.base.cp) + " waves : " + str_list(
+            self.wave_list)
 
 
 class KNodeList(object):
@@ -88,8 +112,7 @@ class KNodeList(object):
 
         for i in range(len(self.tendency_list)):
             print("-" * 20)
-            for j in range(len(self.tendency_list[i].list)):
-                print(self.tendency_list[i].list[j].cp)
+            print(self.tendency_list[i])
 
     def find_max_tendency(self, wave_from_index, tendency_number, delay_number):
         first_wave = self.wave_list[wave_from_index]
@@ -108,6 +131,7 @@ class KNodeList(object):
                     delay_count = 0
                     tendency_count += 1
                     max_wave_index = i
+                    max_value = curr_node.cp
                 else:
                     delay_count += 1
 
@@ -155,6 +179,13 @@ def alynize(knodeList):
     return mid
 
 
+def str_list(list):
+    result = ""
+    for item in list:
+        result += str(item)
+    return result
+
+
 if __name__ == '__main__':
     df = []
     df.append(KNode(cp=1))
@@ -174,3 +205,5 @@ if __name__ == '__main__':
     #     print("-" * 20)
     #     for j in range(len(kl.wave_list[i].list)):
     #         print(kl.wave_list[i].list[j].cp)
+
+    print(str_list(df))
